@@ -18,7 +18,7 @@ import numpy as np
 import torch
 from torch import nn
 
-
+import transformer_engine.pytorch as te
 def get_timestep_embedding(
     timesteps: torch.Tensor,
     embedding_dim: int,
@@ -164,10 +164,10 @@ class TimestepEmbedding(nn.Module):
     ):
         super().__init__()
 
-        self.linear_1 = nn.Linear(in_channels, time_embed_dim)
+        self.linear_1 = te.Linear(in_channels, time_embed_dim)
 
         if cond_proj_dim is not None:
-            self.cond_proj = nn.Linear(cond_proj_dim, in_channels, bias=False)
+            self.cond_proj = te.Linear(cond_proj_dim, in_channels, bias=False)
         else:
             self.cond_proj = None
 
@@ -184,7 +184,7 @@ class TimestepEmbedding(nn.Module):
             time_embed_dim_out = out_dim
         else:
             time_embed_dim_out = time_embed_dim
-        self.linear_2 = nn.Linear(time_embed_dim, time_embed_dim_out)
+        self.linear_2 = te.Linear(time_embed_dim, time_embed_dim_out)
 
         if post_act_fn is None:
             self.post_act = None
@@ -384,7 +384,7 @@ class TextTimeEmbedding(nn.Module):
         super().__init__()
         self.norm1 = nn.LayerNorm(encoder_dim)
         self.pool = AttentionPooling(num_heads, encoder_dim)
-        self.proj = nn.Linear(encoder_dim, time_embed_dim)
+        self.proj = te.Linear(encoder_dim, time_embed_dim)
         self.norm2 = nn.LayerNorm(time_embed_dim)
 
     def forward(self, hidden_states):
@@ -402,9 +402,9 @@ class AttentionPooling(nn.Module):
         super().__init__()
         self.dtype = dtype
         self.positional_embedding = nn.Parameter(torch.randn(1, embed_dim) / embed_dim**0.5)
-        self.k_proj = nn.Linear(embed_dim, embed_dim, dtype=self.dtype)
-        self.q_proj = nn.Linear(embed_dim, embed_dim, dtype=self.dtype)
-        self.v_proj = nn.Linear(embed_dim, embed_dim, dtype=self.dtype)
+        self.k_proj = te.Linear(embed_dim, embed_dim, dtype=self.dtype)
+        self.q_proj = te.Linear(embed_dim, embed_dim, dtype=self.dtype)
+        self.v_proj = te.Linear(embed_dim, embed_dim, dtype=self.dtype)
         self.num_heads = num_heads
         self.dim_per_head = embed_dim // self.num_heads
 

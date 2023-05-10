@@ -13,7 +13,7 @@
 # limitations under the License.
 import warnings
 from typing import Callable, Optional, Union
-
+import transformer_engine.pytorch as te
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -118,22 +118,22 @@ class Attention(nn.Module):
                 f"unknown cross_attention_norm: {cross_attention_norm}. Should be None, 'layer_norm' or 'group_norm'"
             )
 
-        self.to_q = nn.Linear(query_dim, inner_dim, bias=bias)
+        self.to_q = te.Linear(query_dim, inner_dim, bias=bias)
 
         if not self.only_cross_attention:
             # only relevant for the `AddedKVProcessor` classes
-            self.to_k = nn.Linear(cross_attention_dim, inner_dim, bias=bias)
-            self.to_v = nn.Linear(cross_attention_dim, inner_dim, bias=bias)
+            self.to_k = te.Linear(cross_attention_dim, inner_dim, bias=bias)
+            self.to_v = te.Linear(cross_attention_dim, inner_dim, bias=bias)
         else:
             self.to_k = None
             self.to_v = None
 
         if self.added_kv_proj_dim is not None:
-            self.add_k_proj = nn.Linear(added_kv_proj_dim, inner_dim)
-            self.add_v_proj = nn.Linear(added_kv_proj_dim, inner_dim)
+            self.add_k_proj = te.Linear(added_kv_proj_dim, inner_dim)
+            self.add_v_proj = te.Linear(added_kv_proj_dim, inner_dim)
 
         self.to_out = nn.ModuleList([])
-        self.to_out.append(nn.Linear(inner_dim, query_dim, bias=out_bias))
+        self.to_out.append(te.Linear(inner_dim, query_dim, bias=out_bias))
         self.to_out.append(nn.Dropout(dropout))
 
         # set attention processor
@@ -444,8 +444,8 @@ class LoRALinearLayer(nn.Module):
         if rank > min(in_features, out_features):
             raise ValueError(f"LoRA rank {rank} must be less or equal than {min(in_features, out_features)}")
 
-        self.down = nn.Linear(in_features, rank, bias=False)
-        self.up = nn.Linear(rank, out_features, bias=False)
+        self.down = te.Linear(in_features, rank, bias=False)
+        self.up = te.Linear(rank, out_features, bias=False)
 
         nn.init.normal_(self.down.weight, std=1 / rank)
         nn.init.zeros_(self.up.weight)
@@ -524,12 +524,12 @@ class CustomDiffusionAttnProcessor(nn.Module):
 
         # `_custom_diffusion` id for easy serialization and loading.
         if self.train_kv:
-            self.to_k_custom_diffusion = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
-            self.to_v_custom_diffusion = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
+            self.to_k_custom_diffusion = te.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
+            self.to_v_custom_diffusion = te.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
         if self.train_q_out:
-            self.to_q_custom_diffusion = nn.Linear(hidden_size, hidden_size, bias=False)
+            self.to_q_custom_diffusion = te.Linear(hidden_size, hidden_size, bias=False)
             self.to_out_custom_diffusion = nn.ModuleList([])
-            self.to_out_custom_diffusion.append(nn.Linear(hidden_size, hidden_size, bias=out_bias))
+            self.to_out_custom_diffusion.append(te.Linear(hidden_size, hidden_size, bias=out_bias))
             self.to_out_custom_diffusion.append(nn.Dropout(dropout))
 
     def __call__(self, attn: Attention, hidden_states, encoder_hidden_states=None, attention_mask=None):
@@ -911,12 +911,12 @@ class CustomDiffusionXFormersAttnProcessor(nn.Module):
 
         # `_custom_diffusion` id for easy serialization and loading.
         if self.train_kv:
-            self.to_k_custom_diffusion = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
-            self.to_v_custom_diffusion = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
+            self.to_k_custom_diffusion = te.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
+            self.to_v_custom_diffusion = te.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
         if self.train_q_out:
-            self.to_q_custom_diffusion = nn.Linear(hidden_size, hidden_size, bias=False)
+            self.to_q_custom_diffusion = te.Linear(hidden_size, hidden_size, bias=False)
             self.to_out_custom_diffusion = nn.ModuleList([])
-            self.to_out_custom_diffusion.append(nn.Linear(hidden_size, hidden_size, bias=out_bias))
+            self.to_out_custom_diffusion.append(te.Linear(hidden_size, hidden_size, bias=out_bias))
             self.to_out_custom_diffusion.append(nn.Dropout(dropout))
 
     def __call__(self, attn: Attention, hidden_states, encoder_hidden_states=None, attention_mask=None):

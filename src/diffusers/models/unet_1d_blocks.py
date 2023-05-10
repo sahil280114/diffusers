@@ -16,7 +16,7 @@ import math
 import torch
 import torch.nn.functional as F
 from torch import nn
-
+import transformer_engine.pytorch as te
 from .resnet import Downsample1D, ResidualTemporalBlock1D, Upsample1D, rearrange_dims
 
 
@@ -253,9 +253,9 @@ class OutValueFunctionBlock(nn.Module):
         super().__init__()
         self.final_block = nn.ModuleList(
             [
-                nn.Linear(fc_dim + embed_dim, fc_dim // 2),
+                te.Linear(fc_dim + embed_dim, fc_dim // 2),
                 nn.Mish(),
-                nn.Linear(fc_dim // 2, 1),
+                te.Linear(fc_dim // 2, 1),
             ]
         )
 
@@ -327,11 +327,11 @@ class SelfAttention1d(nn.Module):
         self.group_norm = nn.GroupNorm(1, num_channels=in_channels)
         self.num_heads = n_head
 
-        self.query = nn.Linear(self.channels, self.channels)
-        self.key = nn.Linear(self.channels, self.channels)
-        self.value = nn.Linear(self.channels, self.channels)
+        self.query = te.Linear(self.channels, self.channels)
+        self.key = te.Linear(self.channels, self.channels)
+        self.value = te.Linear(self.channels, self.channels)
 
-        self.proj_attn = nn.Linear(self.channels, self.channels, bias=True)
+        self.proj_attn = te.Linear(self.channels, self.channels, bias=True)
 
         self.dropout = nn.Dropout(dropout_rate, inplace=True)
 

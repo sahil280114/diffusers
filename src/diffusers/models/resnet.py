@@ -15,7 +15,7 @@
 
 from functools import partial
 from typing import Optional
-
+import transformer_engine.pytorch as te
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -494,9 +494,9 @@ class ResnetBlock2D(nn.Module):
 
         if temb_channels is not None:
             if self.time_embedding_norm == "default":
-                self.time_emb_proj = torch.nn.Linear(temb_channels, out_channels)
+                self.time_emb_proj = torch.te.Linear(temb_channels, out_channels)
             elif self.time_embedding_norm == "scale_shift":
-                self.time_emb_proj = torch.nn.Linear(temb_channels, 2 * out_channels)
+                self.time_emb_proj = torch.te.Linear(temb_channels, 2 * out_channels)
             elif self.time_embedding_norm == "ada_group":
                 self.time_emb_proj = None
             else:
@@ -647,7 +647,7 @@ class ResidualTemporalBlock1D(nn.Module):
         self.conv_out = Conv1dBlock(out_channels, out_channels, kernel_size)
 
         self.time_emb_act = nn.Mish()
-        self.time_emb = nn.Linear(embed_dim, out_channels)
+        self.time_emb = te.Linear(embed_dim, out_channels)
 
         self.residual_conv = (
             nn.Conv1d(inp_channels, out_channels, 1) if inp_channels != out_channels else nn.Identity()

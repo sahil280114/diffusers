@@ -20,7 +20,7 @@ from ...models.transformer_2d import Transformer2DModel
 from ...models.unet_2d_condition import UNet2DConditionOutput
 from ...utils import logging
 
-
+import transformer_engine.pytorch as te
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 
@@ -351,7 +351,7 @@ class UNetFlatConditionModel(ModelMixin, ConfigMixin):
         )
 
         if encoder_hid_dim is not None:
-            self.encoder_hid_proj = nn.Linear(encoder_hid_dim, cross_attention_dim)
+            self.encoder_hid_proj = te.Linear(encoder_hid_dim, cross_attention_dim)
         else:
             self.encoder_hid_proj = None
 
@@ -380,7 +380,7 @@ class UNetFlatConditionModel(ModelMixin, ConfigMixin):
                 raise ValueError(
                     "`class_embed_type`: 'simple_projection' requires `projection_class_embeddings_input_dim` be set"
                 )
-            self.class_embedding = nn.Linear(projection_class_embeddings_input_dim, time_embed_dim)
+            self.class_embedding = te.Linear(projection_class_embeddings_input_dim, time_embed_dim)
         else:
             self.class_embedding = None
 
@@ -899,7 +899,7 @@ class UNetFlatConditionModel(ModelMixin, ConfigMixin):
         return UNet2DConditionOutput(sample=sample)
 
 
-class LinearMultiDim(nn.Linear):
+class LinearMultiDim(te.Linear):
     def __init__(self, in_features, out_features=None, second_dim=4, *args, **kwargs):
         in_features = [in_features, second_dim, 1] if isinstance(in_features, int) else list(in_features)
         if out_features is None:
@@ -959,7 +959,7 @@ class ResnetBlockFlat(nn.Module):
         self.conv1 = torch.nn.Conv2d(self.in_channels_prod, out_channels_prod, kernel_size=1, padding=0)
 
         if temb_channels is not None:
-            self.time_emb_proj = torch.nn.Linear(temb_channels, out_channels_prod)
+            self.time_emb_proj = torch.te.Linear(temb_channels, out_channels_prod)
         else:
             self.time_emb_proj = None
 

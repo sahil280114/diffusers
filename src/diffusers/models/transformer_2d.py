@@ -17,7 +17,7 @@ from typing import Optional
 import torch
 import torch.nn.functional as F
 from torch import nn
-
+import transformer_engine.pytorch as te
 from ..configuration_utils import ConfigMixin, register_to_config
 from ..models.embeddings import ImagePositionalEmbeddings
 from ..utils import BaseOutput, deprecate
@@ -144,7 +144,7 @@ class Transformer2DModel(ModelMixin, ConfigMixin):
 
             self.norm = torch.nn.GroupNorm(num_groups=norm_num_groups, num_channels=in_channels, eps=1e-6, affine=True)
             if use_linear_projection:
-                self.proj_in = nn.Linear(in_channels, inner_dim)
+                self.proj_in = te.Linear(in_channels, inner_dim)
             else:
                 self.proj_in = nn.Conv2d(in_channels, inner_dim, kernel_size=1, stride=1, padding=0)
         elif self.is_input_vectorized:
@@ -200,16 +200,16 @@ class Transformer2DModel(ModelMixin, ConfigMixin):
         if self.is_input_continuous:
             # TODO: should use out_channels for continuous projections
             if use_linear_projection:
-                self.proj_out = nn.Linear(inner_dim, in_channels)
+                self.proj_out = te.Linear(inner_dim, in_channels)
             else:
                 self.proj_out = nn.Conv2d(inner_dim, in_channels, kernel_size=1, stride=1, padding=0)
         elif self.is_input_vectorized:
             self.norm_out = nn.LayerNorm(inner_dim)
-            self.out = nn.Linear(inner_dim, self.num_vector_embeds - 1)
+            self.out = te.Linear(inner_dim, self.num_vector_embeds - 1)
         elif self.is_input_patches:
             self.norm_out = nn.LayerNorm(inner_dim, elementwise_affine=False, eps=1e-6)
-            self.proj_out_1 = nn.Linear(inner_dim, 2 * inner_dim)
-            self.proj_out_2 = nn.Linear(inner_dim, patch_size * patch_size * self.out_channels)
+            self.proj_out_1 = te.Linear(inner_dim, 2 * inner_dim)
+            self.proj_out_2 = te.Linear(inner_dim, patch_size * patch_size * self.out_channels)
 
     def forward(
         self,

@@ -10,7 +10,7 @@ from ..utils import BaseOutput
 from .attention import BasicTransformerBlock
 from .embeddings import TimestepEmbedding, Timesteps
 from .modeling_utils import ModelMixin
-
+import transformer_engine.pytorch as te
 
 @dataclass
 class PriorTransformerOutput(BaseOutput):
@@ -68,10 +68,10 @@ class PriorTransformer(ModelMixin, ConfigMixin):
         self.time_proj = Timesteps(inner_dim, True, 0)
         self.time_embedding = TimestepEmbedding(inner_dim, inner_dim)
 
-        self.proj_in = nn.Linear(embedding_dim, inner_dim)
+        self.proj_in = te.Linear(embedding_dim, inner_dim)
 
-        self.embedding_proj = nn.Linear(embedding_dim, inner_dim)
-        self.encoder_hidden_states_proj = nn.Linear(embedding_dim, inner_dim)
+        self.embedding_proj = te.Linear(embedding_dim, inner_dim)
+        self.encoder_hidden_states_proj = te.Linear(embedding_dim, inner_dim)
 
         self.positional_embedding = nn.Parameter(torch.zeros(1, num_embeddings + additional_embeddings, inner_dim))
 
@@ -92,7 +92,7 @@ class PriorTransformer(ModelMixin, ConfigMixin):
         )
 
         self.norm_out = nn.LayerNorm(inner_dim)
-        self.proj_to_clip_embeddings = nn.Linear(inner_dim, embedding_dim)
+        self.proj_to_clip_embeddings = te.Linear(inner_dim, embedding_dim)
 
         causal_attention_mask = torch.full(
             [num_embeddings + additional_embeddings, num_embeddings + additional_embeddings], -10000.0

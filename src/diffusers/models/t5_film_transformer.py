@@ -15,7 +15,7 @@ import math
 
 import torch
 from torch import nn
-
+import transformer_engine.pytorch as te
 from ..configuration_utils import ConfigMixin, register_to_config
 from .attention_processor import Attention
 from .embeddings import get_timestep_embedding
@@ -39,16 +39,16 @@ class T5FilmDecoder(ModelMixin, ConfigMixin):
         super().__init__()
 
         self.conditioning_emb = nn.Sequential(
-            nn.Linear(d_model, d_model * 4, bias=False),
+            te.Linear(d_model, d_model * 4, bias=False),
             nn.SiLU(),
-            nn.Linear(d_model * 4, d_model * 4, bias=False),
+            te.Linear(d_model * 4, d_model * 4, bias=False),
             nn.SiLU(),
         )
 
         self.position_encoding = nn.Embedding(targets_length, d_model)
         self.position_encoding.weight.requires_grad = False
 
-        self.continuous_inputs_projection = nn.Linear(input_dims, d_model, bias=False)
+        self.continuous_inputs_projection = te.Linear(input_dims, d_model, bias=False)
 
         self.dropout = nn.Dropout(p=dropout_rate)
 
@@ -61,7 +61,7 @@ class T5FilmDecoder(ModelMixin, ConfigMixin):
         self.decoder_norm = T5LayerNorm(d_model)
 
         self.post_dropout = nn.Dropout(p=dropout_rate)
-        self.spec_out = nn.Linear(d_model, input_dims, bias=False)
+        self.spec_out = te.Linear(d_model, input_dims, bias=False)
 
     def encoder_decoder_mask(self, query_input, key_input):
         mask = torch.mul(query_input.unsqueeze(-1), key_input.unsqueeze(-2))
@@ -254,9 +254,9 @@ class T5LayerFFCond(nn.Module):
 class T5DenseGatedActDense(nn.Module):
     def __init__(self, d_model, d_ff, dropout_rate):
         super().__init__()
-        self.wi_0 = nn.Linear(d_model, d_ff, bias=False)
-        self.wi_1 = nn.Linear(d_model, d_ff, bias=False)
-        self.wo = nn.Linear(d_ff, d_model, bias=False)
+        self.wi_0 = te.Linear(d_model, d_ff, bias=False)
+        self.wi_1 = te.Linear(d_model, d_ff, bias=False)
+        self.wo = te.Linear(d_ff, d_model, bias=False)
         self.dropout = nn.Dropout(dropout_rate)
         self.act = NewGELUActivation()
 
@@ -312,7 +312,7 @@ class T5FiLMLayer(nn.Module):
 
     def __init__(self, in_features, out_features):
         super().__init__()
-        self.scale_bias = nn.Linear(in_features, out_features * 2, bias=False)
+        self.scale_bias = te.Linear(in_features, out_features * 2, bias=False)
 
     def forward(self, x, conditioning_emb):
         emb = self.scale_bias(conditioning_emb)

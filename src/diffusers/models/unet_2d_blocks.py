@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from typing import Optional
-
+import transformer_engine.pytorch as te
 import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
-
+import transformer_engine.pytorch as te
 from .attention import AdaGroupNorm, AttentionBlock
 from .attention_processor import Attention, AttnAddedKVProcessor, AttnAddedKVProcessor2_0
 from .dual_transformer_2d import DualTransformer2DModel

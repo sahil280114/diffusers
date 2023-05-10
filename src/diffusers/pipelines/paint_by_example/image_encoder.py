@@ -18,7 +18,7 @@ from transformers import CLIPPreTrainedModel, CLIPVisionModel
 from ...models.attention import BasicTransformerBlock
 from ...utils import logging
 
-
+import transformer_engine.pytorch as te
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 
 
@@ -30,7 +30,7 @@ class PaintByExampleImageEncoder(CLIPPreTrainedModel):
         self.model = CLIPVisionModel(config)
         self.mapper = PaintByExampleMapper(config)
         self.final_layer_norm = nn.LayerNorm(config.hidden_size)
-        self.proj_out = nn.Linear(config.hidden_size, self.proj_size)
+        self.proj_out = te.Linear(config.hidden_size, self.proj_size)
 
         # uncondition for scaling
         self.uncond_vector = nn.Parameter(torch.randn((1, 1, self.proj_size)))

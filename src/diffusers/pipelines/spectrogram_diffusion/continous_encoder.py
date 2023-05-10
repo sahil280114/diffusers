@@ -21,7 +21,7 @@ from transformers.models.t5.modeling_t5 import (
     T5Config,
     T5LayerNorm,
 )
-
+import transformer_engine.pytorch as te
 from ...configuration_utils import ConfigMixin, register_to_config
 from ...models import ModelMixin
 
@@ -43,7 +43,7 @@ class SpectrogramContEncoder(ModelMixin, ConfigMixin, ModuleUtilsMixin):
     ):
         super().__init__()
 
-        self.input_proj = nn.Linear(input_dims, d_model, bias=False)
+        self.input_proj = te.Linear(input_dims, d_model, bias=False)
 
         self.position_encoding = nn.Embedding(targets_context_length, d_model)
         self.position_encoding.weight.requires_grad = False

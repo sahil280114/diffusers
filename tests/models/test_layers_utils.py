@@ -538,7 +538,7 @@ class Transformer2DModelTests(unittest.TestCase):
 
         assert spatial_transformer_block.transformer_blocks[0].ff.net[0].__class__ == GEGLU
         assert spatial_transformer_block.transformer_blocks[0].ff.net[1].__class__ == nn.Dropout
-        assert spatial_transformer_block.transformer_blocks[0].ff.net[2].__class__ == nn.Linear
+        assert spatial_transformer_block.transformer_blocks[0].ff.net[2].__class__ == te.Linear
 
         dim = 32
         inner_dim = 128
@@ -562,7 +562,7 @@ class Transformer2DModelTests(unittest.TestCase):
 
         assert spatial_transformer_block.transformer_blocks[0].ff.net[0].__class__ == ApproximateGELU
         assert spatial_transformer_block.transformer_blocks[0].ff.net[1].__class__ == nn.Dropout
-        assert spatial_transformer_block.transformer_blocks[0].ff.net[2].__class__ == nn.Linear
+        assert spatial_transformer_block.transformer_blocks[0].ff.net[2].__class__ == te.Linear
 
         dim = 32
         inner_dim = 128

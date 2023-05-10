@@ -13,7 +13,7 @@
 # limitations under the License.
 import math
 from typing import Callable, Optional
-
+import transformer_engine.pytorch as te
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -64,12 +64,12 @@ class AttentionBlock(nn.Module):
         self.group_norm = nn.GroupNorm(num_channels=channels, num_groups=norm_num_groups, eps=eps, affine=True)
 
         # define q,k,v as linear layers
-        self.query = nn.Linear(channels, channels)
-        self.key = nn.Linear(channels, channels)
-        self.value = nn.Linear(channels, channels)
+        self.query = te.Linear(channels, channels)
+        self.key = te.Linear(channels, channels)
+        self.value = te.Linear(channels, channels)
 
         self.rescale_output_factor = rescale_output_factor
-        self.proj_attn = nn.Linear(channels, channels, bias=True)
+        self.proj_attn = te.Linear(channels, channels, bias=True)
 
         self._use_memory_efficient_attention_xformers = False
         self._use_2_0_attn = True
@@ -395,7 +395,7 @@ class FeedForward(nn.Module):
         # project dropout
         self.net.append(nn.Dropout(dropout))
         # project out
-        self.net.append(nn.Linear(inner_dim, dim_out))
+        self.net.append(te.Linear(inner_dim, dim_out))
         # FF as used in Vision Transformer, MLP-Mixer, etc. have a final dropout
         if final_dropout:
             self.net.append(nn.Dropout(dropout))
@@ -413,7 +413,7 @@ class GELU(nn.Module):
 
     def __init__(self, dim_in: int, dim_out: int, approximate: str = "none"):
         super().__init__()
-        self.proj = nn.Linear(dim_in, dim_out)
+        self.proj = te.Linear(dim_in, dim_out)
         self.approximate = approximate
 
     def gelu(self, gate):
@@ -439,7 +439,7 @@ class GEGLU(nn.Module):
 
     def __init__(self, dim_in: int, dim_out: int):
         super().__init__()
-        self.proj = nn.Linear(dim_in, dim_out * 2)
+        self.proj = te.Linear(dim_in, dim_out * 2)
 
     def gelu(self, gate):
         if gate.device.type != "mps":
@@ -461,7 +461,7 @@ class ApproximateGELU(nn.Module):
 
     def __init__(self, dim_in: int, dim_out: int):
         super().__init__()
-        self.proj = nn.Linear(dim_in, dim_out)
+        self.proj = te.Linear(dim_in, dim_out)
 
     def forward(self, x):
         x = self.proj(x)
@@ -477,7 +477,7 @@ class AdaLayerNorm(nn.Module):
         super().__init__()
         self.emb = nn.Embedding(num_embeddings, embedding_dim)
         self.silu = nn.SiLU()
-        self.linear = nn.Linear(embedding_dim, embedding_dim * 2)
+        self.linear = te.Linear(embedding_dim, embedding_dim * 2)
         self.norm = nn.LayerNorm(embedding_dim, elementwise_affine=False)
 
     def forward(self, x, timestep):
@@ -498,7 +498,7 @@ class AdaLayerNormZero(nn.Module):
         self.emb = CombinedTimestepLabelEmbeddings(num_embeddings, embedding_dim)
 
         self.silu = nn.SiLU()
-        self.linear = nn.Linear(embedding_dim, 6 * embedding_dim, bias=True)
+        self.linear = te.Linear(embedding_dim, 6 * embedding_dim, bias=True)
         self.norm = nn.LayerNorm(embedding_dim, elementwise_affine=False, eps=1e-6)
 
     def forward(self, x, timestep, class_labels, hidden_dtype=None):
@@ -529,7 +529,7 @@ class AdaGroupNorm(nn.Module):
         elif act_fn == "gelu":
             self.act = nn.GELU()
 
-        self.linear = nn.Linear(embedding_dim, out_dim * 2)
+        self.linear = te.Linear(embedding_dim, out_dim * 2)
 
     def forward(self, x, emb):
         if self.act:

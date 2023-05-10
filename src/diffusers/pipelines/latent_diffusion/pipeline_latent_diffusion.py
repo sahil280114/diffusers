@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import transformer_engine.pytorch as te
 import inspect
 from typing import List, Optional, Tuple, Union
 
@@ -301,10 +301,10 @@ class LDMBertAttention(nn.Module):
         self.scaling = self.head_dim**-0.5
         self.is_decoder = is_decoder
 
-        self.k_proj = nn.Linear(embed_dim, self.inner_dim, bias=bias)
-        self.v_proj = nn.Linear(embed_dim, self.inner_dim, bias=bias)
-        self.q_proj = nn.Linear(embed_dim, self.inner_dim, bias=bias)
-        self.out_proj = nn.Linear(self.inner_dim, embed_dim)
+        self.k_proj = te.Linear(embed_dim, self.inner_dim, bias=bias)
+        self.v_proj = te.Linear(embed_dim, self.inner_dim, bias=bias)
+        self.q_proj = te.Linear(embed_dim, self.inner_dim, bias=bias)
+        self.out_proj = te.Linear(self.inner_dim, embed_dim)
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
         return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
@@ -437,8 +437,8 @@ class LDMBertEncoderLayer(nn.Module):
         self.dropout = config.dropout
         self.activation_fn = ACT2FN[config.activation_function]
         self.activation_dropout = config.activation_dropout
-        self.fc1 = nn.Linear(self.embed_dim, config.encoder_ffn_dim)
-        self.fc2 = nn.Linear(config.encoder_ffn_dim, self.embed_dim)
+        self.fc1 = te.Linear(self.embed_dim, config.encoder_ffn_dim)
+        self.fc2 = te.Linear(config.encoder_ffn_dim, self.embed_dim)
         self.final_layer_norm = nn.LayerNorm(self.embed_dim)
 
     def forward(
@@ -501,7 +501,7 @@ class LDMBertPreTrainedModel(PreTrainedModel):
 
     def _init_weights(self, module):
         std = self.config.init_std
-        if isinstance(module, nn.Linear):
+        if isinstance(module, te.Linear):
             module.weight.data.normal_(mean=0.0, std=std)
             if module.bias is not None:
                 module.bias.data.zero_()
@@ -698,7 +698,7 @@ class LDMBertModel(LDMBertPreTrainedModel):
     def __init__(self, config: LDMBertConfig):
         super().__init__(config)
         self.model = LDMBertEncoder(config)
-        self.to_logits = nn.Linear(config.hidden_size, config.vocab_size)
+        self.to_logits = te.Linear(config.hidden_size, config.vocab_size)
 
     def forward(
         self,

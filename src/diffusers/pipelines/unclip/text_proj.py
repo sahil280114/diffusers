@@ -17,7 +17,7 @@ from torch import nn
 
 from ...configuration_utils import ConfigMixin, register_to_config
 from ...models import ModelMixin
-
+import transformer_engine.pytorch as te
 
 class UnCLIPTextProjModel(ModelMixin, ConfigMixin):
     """
@@ -41,15 +41,15 @@ class UnCLIPTextProjModel(ModelMixin, ConfigMixin):
         self.learned_classifier_free_guidance_embeddings = nn.Parameter(torch.zeros(clip_embeddings_dim))
 
         # parameters for additional clip time embeddings
-        self.embedding_proj = nn.Linear(clip_embeddings_dim, time_embed_dim)
-        self.clip_image_embeddings_project_to_time_embeddings = nn.Linear(clip_embeddings_dim, time_embed_dim)
+        self.embedding_proj = te.Linear(clip_embeddings_dim, time_embed_dim)
+        self.clip_image_embeddings_project_to_time_embeddings = te.Linear(clip_embeddings_dim, time_embed_dim)
 
         # parameters for encoder hidden states
         self.clip_extra_context_tokens = clip_extra_context_tokens
-        self.clip_extra_context_tokens_proj = nn.Linear(
+        self.clip_extra_context_tokens_proj = te.Linear(
             clip_embeddings_dim, self.clip_extra_context_tokens * cross_attention_dim
         )
-        self.encoder_hidden_states_proj = nn.Linear(clip_embeddings_dim, cross_attention_dim)
+        self.encoder_hidden_states_proj = te.Linear(clip_embeddings_dim, cross_attention_dim)
         self.text_encoder_hidden_states_norm = nn.LayerNorm(cross_attention_dim)
 
     def forward(self, *, image_embeddings, prompt_embeds, text_encoder_hidden_states, do_classifier_free_guidance):

@@ -16,7 +16,7 @@ from typing import Optional
 
 import torch
 from torch import nn
-
+import transformer_engine.pytorch as te
 from ..configuration_utils import ConfigMixin, register_to_config
 from ..utils import BaseOutput
 from .attention import BasicTransformerBlock
@@ -81,7 +81,7 @@ class TransformerTemporalModel(ModelMixin, ConfigMixin):
         self.in_channels = in_channels
 
         self.norm = torch.nn.GroupNorm(num_groups=norm_num_groups, num_channels=in_channels, eps=1e-6, affine=True)
-        self.proj_in = nn.Linear(in_channels, inner_dim)
+        self.proj_in = te.Linear(in_channels, inner_dim)
 
         # 3. Define transformers blocks
         self.transformer_blocks = nn.ModuleList(
@@ -101,7 +101,7 @@ class TransformerTemporalModel(ModelMixin, ConfigMixin):
             ]
         )
 
-        self.proj_out = nn.Linear(inner_dim, in_channels)
+        self.proj_out = te.Linear(inner_dim, in_channels)
 
     def forward(
         self,

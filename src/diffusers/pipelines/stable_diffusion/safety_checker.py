@@ -18,7 +18,7 @@ import torch.nn as nn
 from transformers import CLIPConfig, CLIPVisionModel, PreTrainedModel
 
 from ...utils import logging
-
+import transformer_engine.pytorch as te
 
 logger = logging.get_logger(__name__)
 
@@ -38,7 +38,7 @@ class StableDiffusionSafetyChecker(PreTrainedModel):
         super().__init__(config)
 
         self.vision_model = CLIPVisionModel(config.vision_config)
-        self.visual_projection = nn.Linear(config.vision_config.hidden_size, config.projection_dim, bias=False)
+        self.visual_projection = te.Linear(config.vision_config.hidden_size, config.projection_dim, bias=False)
 
         self.concept_embeds = nn.Parameter(torch.ones(17, config.projection_dim), requires_grad=False)
         self.special_care_embeds = nn.Parameter(torch.ones(3, config.projection_dim), requires_grad=False)

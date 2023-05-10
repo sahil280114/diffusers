@@ -8,7 +8,7 @@ from ...utils import logging
 
 logger = logging.get_logger(__name__)
 
-
+import transformer_engine.pytorch as te
 class IFSafetyChecker(PreTrainedModel):
     config_class = CLIPConfig
 
@@ -19,8 +19,8 @@ class IFSafetyChecker(PreTrainedModel):
 
         self.vision_model = CLIPVisionModelWithProjection(config.vision_config)
 
-        self.p_head = nn.Linear(config.vision_config.projection_dim, 1)
-        self.w_head = nn.Linear(config.vision_config.projection_dim, 1)
+        self.p_head = te.Linear(config.vision_config.projection_dim, 1)
+        self.w_head = te.Linear(config.vision_config.projection_dim, 1)
 
     @torch.no_grad()
     def forward(self, clip_input, images, p_threshold=0.5, w_threshold=0.5):

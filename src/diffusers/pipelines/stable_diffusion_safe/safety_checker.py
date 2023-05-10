@@ -21,7 +21,7 @@ from ...utils import logging
 
 logger = logging.get_logger(__name__)
 
-
+import transformer_engine.pytorch as te
 def cosine_distance(image_embeds, text_embeds):
     normalized_image_embeds = nn.functional.normalize(image_embeds)
     normalized_text_embeds = nn.functional.normalize(text_embeds)
@@ -37,7 +37,7 @@ class SafeStableDiffusionSafetyChecker(PreTrainedModel):
         super().__init__(config)
 
         self.vision_model = CLIPVisionModel(config.vision_config)
-        self.visual_projection = nn.Linear(config.vision_config.hidden_size, config.projection_dim, bias=False)
+        self.visual_projection = te.Linear(config.vision_config.hidden_size, config.projection_dim, bias=False)
 
         self.concept_embeds = nn.Parameter(torch.ones(17, config.projection_dim), requires_grad=False)
         self.special_care_embeds = nn.Parameter(torch.ones(3, config.projection_dim), requires_grad=False)
