@@ -959,7 +959,7 @@ class ResnetBlockFlat(nn.Module):
         self.conv1 = torch.nn.Conv2d(self.in_channels_prod, out_channels_prod, kernel_size=1, padding=0)
 
         if temb_channels is not None:
-            self.time_emb_proj = torch.te.Linear(temb_channels, out_channels_prod)
+            self.time_emb_proj = te.Linear(temb_channels, out_channels_prod)
         else:
             self.time_emb_proj = None
 

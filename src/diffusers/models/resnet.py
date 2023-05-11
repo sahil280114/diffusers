@@ -494,9 +494,9 @@ class ResnetBlock2D(nn.Module):
 
         if temb_channels is not None:
             if self.time_embedding_norm == "default":
-                self.time_emb_proj = torch.te.Linear(temb_channels, out_channels)
+                self.time_emb_proj = te.Linear(temb_channels, out_channels)
             elif self.time_embedding_norm == "scale_shift":
-                self.time_emb_proj = torch.te.Linear(temb_channels, 2 * out_channels)
+                self.time_emb_proj = te.Linear(temb_channels, 2 * out_channels)
             elif self.time_embedding_norm == "ada_group":
                 self.time_emb_proj = None
             else:
